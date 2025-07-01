@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Crypto ↔ Fiat Converter</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css" rel="stylesheet" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      background: #f9f9f9;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+    }
+    select, input, button {
+      margin-top: 5px;
+      padding: 6px;
+      width: 320px;
+      font-size: 16px;
+    }
+    #swapBtn {
+      margin: 15px 0;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    #priceChart {
+      margin-top: 40px;
+    }
+    .select2-results__option img,
+    .select2-selection__rendered img {
+      vertical-align: middle;
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>🔄 Crypto ↔ Fiat Converter</h2>
+
+<form id="convertForm">
+  <label for="base">From</label>
+  <select name="base" id="base" required>
+    <optgroup label="Cryptocurrencies">
+      {% for id, info in coin_map.items() %}
+      <option value="{{ id }}" data-img="{{ info.image }}">{{ info.name }}</option>
+      {% endfor %}
+    </optgroup>
+    <optgroup label="Fiat Currencies">
+      {% for code, info in fiat_map.items() %}
+      <option value="{{ code.lower() }}" data-flag="{{ info.country }}">{{ code }} - {{ info.name }}</option>
+      {% endfor %}
+    </optgroup>
+  </select>
+
+  <button type="button" id="swapBtn">⇄ Swap</button>
+
+  <label for="target">To</label>
+  <select name="target" id="target" required>
+    <optgroup label="Fiat Currencies">
+      {% for code, info in fiat_map.items() %}
+      <option value="{{ code.lower() }}" data-flag="{{ info.country }}">{{ code }} - {{ info.name }}</option>
+      {% endfor %}
+    </optgroup>
+    <optgroup label="Cryptocurrencies">
+      {% for id, info in coin_map.items() %}
+      <option value="{{ id }}" data-img="{{ info.image }}">{{ info.name }}</option>
+      {% endfor %}
+    </optgroup>
+  </select>
+
+  <label for="amount">Amount</label>
+  <input type="number" name="amount" id="amount" value="1" step="0.00001" min="0.00001" required>
+
+  <button type="submit" style="margin-top: 15px;">Convert</button>
+</form>
+
+<h3 id="resultText" style="margin-top: 30px;"></h3>
+<canvas id="priceChart" width="700" height="300"></canvas>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  function formatOption(opt) {
+    const img = $(opt.element).data('img');
+    const flag = $(opt.element).data('flag');
+
+    if (!opt.id) return opt.text;
+    if (img) return `<span><img src="${img}"> ${opt.text}</span>`;
+    if (flag) return `<span><img src="https://flagcdn.com/24x18/${flag.toLowerCase()}.png"> ${opt.text}</span>`;
+    return opt.text;
+  }
+
+  $(document).ready(function () {
+    $('#base, #target').select2({
+      templateResult: formatOption,
+      templateSelection: formatOption,
+      escapeMarkup: m => m,
+      width: '100%'
+    });
+
+    $('#swapBtn').click(function () {
+      const baseVal = $('#base').val();
+      const targetVal = $('#target').val();
+      $('#base').val(targetVal).trigger('change');
+      $('#target').val(baseVal).trigger('change');
+    });
+
+    let chart;
+
+    $('#convertForm').on('submit', async function (e) {
+      e.preventDefault();
+      const base = $('#base').val();
+      const target = $('#target').val();
+      const amount = $('#amount').val();
+
+      const res = await fetch(`/convert?base=${base}&target=${target}&amount=${amount}`);
+      const data = await res.json();
+
+      if (data.converted) {
+        $('#resultText').text(`${amount} ${base.toUpperCase()} ≈ ${data.converted} ${target.toUpperCase()}`);
+        const labels = data.history.map(item => new Date(item[0]).toLocaleDateString());
+        const values = data.history.map(item => item[1]);
+
+        if (chart) chart.destroy();
+        chart = new Chart(document.getElementById('priceChart'), {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: `${base.toUpperCase()} → ${target.toUpperCase()}`,
+              data: values,
+              borderColor: "blue",
+              borderWidth: 2,
+              tension: 0.4,
+              fill: false
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: true } },
+            scales: {
+              x: { title: { display: true, text: 'Date' }},
+              y: { title: { display: true, text: `Price (${target.toUpperCase()})` }}
+            }
+          }
+        });
+      } else {
+        $('#resultText').text("⚠️ Conversion failed. Please try again.");
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
+
