@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Select2 Flag & Logo Test</title>
+
+  <!-- ✅ Include Select2 CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+    }
+    .select2-results__option img,
+    .select2-selection__rendered img {
+      vertical-align: middle;
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Crypto Logo + Fiat Flag Test</h2>
+
+  <label>Crypto</label><br>
+  <select id="crypto" style="width: 300px;">
+    <option value="btc" data-img="https://assets.coingecko.com/coins/images/1/small/bitcoin.png">Bitcoin</option>
+    <option value="eth" data-img="https://assets.coingecko.com/coins/images/279/small/ethereum.png">Ethereum</option>
+  </select>
+
+  <br><br>
+
+  <label>Fiat</label><br>
+  <select id="fiat" style="width: 300px;">
+    <option value="usd" data-flag="us">USD - United States Dollar</option>
+    <option value="mur" data-flag="mu">MUR - Mauritian Rupee</option>
+    <option value="eur" data-flag="eu">EUR - Euro</option>
+  </select>
+
+  <!-- ✅ Include jQuery and Select2 JS -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js"></script>
+
+  <script>
+    function formatCrypto(opt) {
+      const img = $(opt.element).data('img');
+      if (!opt.id || !img) return opt.text;
+      return `<span><img src="${img}">${opt.text}</span>`;
+    }
+
+    function formatFiat(opt) {
+      const flag = $(opt.element).data('flag');
+      if (!opt.id || !flag) return opt.text;
+      return `<span><img src="https://flagcdn.com/24x18/${flag}.png">${opt.text}</span>`;
+    }
+
+    $(document).ready(function () {
+      $('#crypto').select2({
+        templateResult: formatCrypto,
+        templateSelection: formatCrypto,
+        escapeMarkup: m => m
+      });
+
+      $('#fiat').select2({
+        templateResult: formatFiat,
+        templateSelection: formatFiat,
+        escapeMarkup: m => m
+      });
+    });
+  </script>
+</body>
+</html>

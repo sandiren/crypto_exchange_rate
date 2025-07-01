@@ -1,0 +1,43 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+venv/
+env/
+*.env
+
+# Environment variable files
+.env
+.env.*
+
+# Flask default files
+instance/
+*.db
+*.sqlite
+
+# Mac and system files
+.DS_Store
+Thumbs.db
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Logs and temporary files
+*.log
+*.bak
+*.tmp
+
+# OS-specific
+ehthumbs.db
+desktop.ini
+
+# Node.js (if used)
+node_modules/
+
+# Python dependency files
+pip-log.txt
